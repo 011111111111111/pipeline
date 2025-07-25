@@ -1,5 +1,5 @@
-# Development stage
-FROM python:3.9-slim as development
+# Single stage build
+FROM python:3.9-slim
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -16,7 +16,8 @@ COPY requirements.txt .
 
 # Install Python dependencies
 RUN pip install --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+    pip install --no-cache-dir -r requirements.txt && \
+    pip install gunicorn
 
 # Copy application code
 COPY . .
@@ -25,27 +26,10 @@ COPY . .
 RUN mkdir -p app/static/uploads && \
     chmod -R 755 app/static/uploads
 
-# Development specific settings
-ENV FLASK_ENV=development
-ENV FLASK_DEBUG=1
-ENV PYTHONPATH=/app
-
-# Command for development
-CMD ["flask", "run", "--host=0.0.0.0", "--port=5000"]
-
-# Production stage
-FROM development as production
-
-# Production specific settings
+# Set environment variables
 ENV FLASK_ENV=production
 ENV FLASK_DEBUG=0
 ENV PYTHONPATH=/app
 
-# Install gunicorn for production
-RUN pip install gunicorn
-
-# Remove development dependencies if any
-RUN pip uninstall -y debugpy
-
-# Command for production
+# Command to run the application
 CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--pythonpath", "/app", "app.app:app"]

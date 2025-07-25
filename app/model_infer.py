@@ -32,16 +32,23 @@ if not your_token.startswith('hf_') or len(your_token) < 10:
 
 model_name = 'google/vit-base-patch16-224'
 
+# Load model and feature extractor
 try:
-    # Load model and extractor once (not every time user uploads)
-    logger.info("Loading feature extractor...")
-    feature_extractor = ViTFeatureExtractor.from_pretrained(model_name, token=your_token)
-    logger.info("Loading model...")
-    model = ViTForImageClassification.from_pretrained(model_name, token=your_token)
+    logger.info("Loading model and feature extractor...")
+    feature_extractor = ViTFeatureExtractor.from_pretrained(
+        model_name, 
+        token=your_token,
+        local_files_only=True  # Use cached model
+    )
+    model = ViTForImageClassification.from_pretrained(
+        model_name, 
+        token=your_token,
+        local_files_only=True  # Use cached model
+    )
     model.eval()
     logger.info("Model and feature extractor loaded successfully")
 except Exception as e:
-    logger.error(f"Error loading model or feature extractor: {str(e)}")
+    logger.error(f"Error loading model: {str(e)}")
     raise
 
 def predict(image_path):
